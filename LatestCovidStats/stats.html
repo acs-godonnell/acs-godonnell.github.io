@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<body>
+    <!-- (A) WE WILL GENERATE THE TABLE HERE -->
+    <div id="demoC"></div>
+
+    <script>
+
+
+        window.addEventListener("load", function () {
+            // (B) PARSE THE JSON STRING INTO OBJECT FIRST
+
+            let url = 'https://services-eu1.arcgis.com/z6bHNio59iTqqSUY/arcgis/rest/services/COVID19_14_Day_Incidence_Rate_per_100k_LEA/FeatureServer/0/query?where=ENGLISH+IN+%28%27TRALEE+LEA-7%27%2C+%27PEMBROKE+LEA-5%27%2C+%27DONAGHMEDE+LEA-5%27%2C+%27HOWTH-MALAHIDE+LEA-7%27%2C+%27BANDON+-+KINSALE+LEA-6%27%29&objectIds=&time=&geometry=&geometryType=esriGeometryEnvelope&inSR=&spatialRel=esriSpatialRelIntersects&resultType=tile&distance=&units=esriSRUnit_Meter&returnGeodetic=false&outFields=Cast%28EventDate+As+CHARACTER%2810%29%29+as+Date%2C+ENGLISH+As+Area%2C+C19_P14_T+As+CasesIn14Days%2C+P14_100k+As+Per100k%2C+Ire_IncP14+As+Per100kCountryWide&returnGeometry=false&returnCentroid=false&featureEncoding=esriDefault&multipatchOption=none&maxAllowableOffset=&geometryPrecision=&outSR=&datumTransformation=&applyVCSProjection=false&returnIdsOnly=false&returnUniqueIdsOnly=false&returnCountOnly=false&returnExtentOnly=false&returnQueryGeometry=false&returnDistinctValues=false&cacheHint=false&orderByFields=ENGLISH&groupByFieldsForStatistics=&outStatistics=&having=&resultOffset=&resultRecordCount=&returnZ=false&returnM=false&returnExceededLimitFeatures=true&quantizationParameters=&sqlFormat=standard&f=pgeojson&token=';
+
+            fetch(url)
+                .then(function (response) {
+                    return response.json();
+                })
+                .then(function (data) {
+                    console.log(data);
+
+                    var _table_ = document.createElement('table'),
+                        _tr_ = document.createElement('tr'),
+                        _th_ = document.createElement('th'),
+                        _td_ = document.createElement('td');
+
+                    _th_.align = "left";
+                    _th_.width = 180;
+
+                    function titleCase(str) {
+                        return str.toLowerCase().split(' ').map(function (word) {
+                            return word.replace(word[0], word[0].toUpperCase());
+                        }).join(' ');
+                    }
+
+                    // Builds the HTML Table out of myList json data from arcgis restful service.
+                    function buildHtmlTable(arr) {
+                        var table = _table_.cloneNode(false), columns = addAllColumnHeaders(arr, table);
+
+                        for (var i = 0, maxi = arr.length; i < maxi; ++i) {
+                            var tr = _tr_.cloneNode(false);
+                            for (var j = 0, maxj = columns.length; j < maxj; ++j) {
+                                var td = _td_.cloneNode(false);
+                                var cellValueU = arr[i].properties[columns[j]];
+                                var cellValue = new String(cellValueU);
+                                cellValue = titleCase(cellValue);
+                                td.appendChild(document.createTextNode(cellValue || ''));
+                                tr.appendChild(td);
+                            }
+                            table.appendChild(tr);
+                        }
+                        return table;
+                    }
+
+                    // Adds a header row to the table and returns the set of columns.
+                    // Need to do union of keys from all records as some records may not contain all records
+                    function addAllColumnHeaders(arr, table) {
+                        var columnSet = [],
+                            tr = _tr_.cloneNode(false);
+                        for (var i = 0, l = arr.length; i < l; i++) {
+                            for (var key in arr[i].properties) {
+                                if (arr[i].properties.hasOwnProperty(key) && columnSet.indexOf(key) === -1) {
+                                    columnSet.push(key);
+                                    var th = _th_.cloneNode(false);
+                                    th.appendChild(document.createTextNode(key));
+                                    tr.appendChild(th);
+                                }
+                            }
+                        }
+                        table.appendChild(tr);
+                        return columnSet;
+                    }
+
+                    document.body.appendChild(buildHtmlTable(data.features));
+                })
+
+        });
+    </script>
+</body>
+</html>
